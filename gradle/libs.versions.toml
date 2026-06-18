@@ -1,9 +1,9 @@
 [versions]
-agp = "9.2.1"
+agp = "8.7.3"
 python = "17.0.0"
 minSdk = "24"
 targetSdk = "28"
-compileSdk = "37"
+compileSdk = "36"
 
 annotation = "1.10.0"
 appcompat = "1.7.1"
