@@ -9,15 +9,31 @@ import com.fongmi.android.tv.utils.Task;
 import com.github.catvod.crawler.SpiderDebug;
 import com.github.catvod.net.OkHttp;
 
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import okhttp3.Dns;
+import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
 public final class PlaybackRemoteSyncer {
 
-    private static final long TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
+    private static final long TIMEOUT_MS = TimeUnit.SECONDS.toMillis(15);
+
+    private static final Dns IPV4_ONLY_DNS = hostname -> {
+        List<InetAddress> all = OkHttp.dns().lookup(hostname);
+        List<InetAddress> ipv4 = new ArrayList<>();
+        for (InetAddress addr : all) if (addr instanceof Inet4Address) ipv4.add(addr);
+        return ipv4.isEmpty() ? all : ipv4;
+    };
+
+    private static OkHttpClient httpClient(long timeoutMs) {
+        return OkHttp.client(timeoutMs).newBuilder().dns(IPV4_ONLY_DNS).build();
+    }
     private static final Runnable PERIODIC = new Runnable() {
         @Override
         public void run() {
@@ -83,7 +99,7 @@ public final class PlaybackRemoteSyncer {
         if (!TextUtils.isEmpty(PlaybackConfigIdentity.currentKey())) builder.header("X-WebHTV-Config-Key", PlaybackConfigIdentity.currentKey());
         if (!TextUtils.isEmpty(PlaybackConfigIdentity.currentName())) builder.header("X-WebHTV-Config-Name", encodeHeader(PlaybackConfigIdentity.currentName()));
         if (!TextUtils.isEmpty(config.token)) builder.header("X-WebHTV-Token", config.token);
-        try (Response response = OkHttp.client(TIMEOUT_MS).newCall(builder.build()).execute()) {
+        try (Response response = httpClient(TIMEOUT_MS).newCall(builder.build()).execute()) {
             if (!response.isSuccessful()) throw new IllegalStateException("HTTP " + response.code());
             return response.body() == null ? "" : response.body().string();
         }
