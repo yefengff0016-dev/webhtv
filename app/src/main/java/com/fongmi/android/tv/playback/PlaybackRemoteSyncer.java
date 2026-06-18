@@ -81,11 +81,17 @@ public final class PlaybackRemoteSyncer {
         Request.Builder builder = new Request.Builder().url(config.url).get();
         builder.header("Accept", "application/json");
         if (!TextUtils.isEmpty(PlaybackConfigIdentity.currentKey())) builder.header("X-WebHTV-Config-Key", PlaybackConfigIdentity.currentKey());
-        if (!TextUtils.isEmpty(PlaybackConfigIdentity.currentName())) builder.header("X-WebHTV-Config-Name", PlaybackConfigIdentity.currentName());
+        if (!TextUtils.isEmpty(PlaybackConfigIdentity.currentName())) builder.header("X-WebHTV-Config-Name", encodeHeader(PlaybackConfigIdentity.currentName()));
         if (!TextUtils.isEmpty(config.token)) builder.header("X-WebHTV-Token", config.token);
         try (Response response = OkHttp.client(TIMEOUT_MS).newCall(builder.build()).execute()) {
             if (!response.isSuccessful()) throw new IllegalStateException("HTTP " + response.code());
             return response.body() == null ? "" : response.body().string();
         }
+    }
+
+    private static String encodeHeader(String value) {
+        if (TextUtils.isEmpty(value)) return value;
+        String encoded = java.net.URLEncoder.encode(value, java.nio.charset.StandardCharsets.UTF_8);
+        return encoded.replace("+", "%20");
     }
 }

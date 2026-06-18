@@ -1,0 +1,16 @@
+name = "webhtv-playback-sync"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
+
+# KV 绑定：部署前先执行 wrangler kv:namespace create PLAYBACK_KV
+# 然后把返回的 id 填到下方
+[[kv_namespaces]]
+binding = "PLAYBACK_KV"
+id = "a00a75f7e7a94574a7365b25e3974230"
+
+# 可选：限制只有持有正确 token 的请求才能写入
+# 留空则不校验 token，任何知道你服务端地址的人都能写入
+# 部署后通过环境变量设置：wrangler secret put ADMIN_TOKEN
+[vars]
+REQUIRE_TOKEN = "true"
+MAX_RECORDS_PER_USER = "5000"

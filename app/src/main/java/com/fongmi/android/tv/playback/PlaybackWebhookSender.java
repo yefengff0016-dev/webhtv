@@ -133,7 +133,7 @@ public final class PlaybackWebhookSender {
         }
         if (!TextUtils.isEmpty(delivery.dedupeKey)) builder.header("X-WebHTV-Dedupe-Key", delivery.dedupeKey);
         if (!TextUtils.isEmpty(delivery.configKey)) builder.header("X-WebHTV-Config-Key", delivery.configKey);
-        if (!TextUtils.isEmpty(delivery.configName)) builder.header("X-WebHTV-Config-Name", delivery.configName);
+        if (!TextUtils.isEmpty(delivery.configName)) builder.header("X-WebHTV-Config-Name", encodeHeader(delivery.configName));
         try (Response response = OkHttp.client(TIMEOUT_MS).newCall(builder.build()).execute()) {
             if (!response.isSuccessful()) throw new IllegalStateException("HTTP " + response.code());
         }
@@ -145,6 +145,12 @@ public final class PlaybackWebhookSender {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    private static String encodeHeader(String value) {
+        if (TextUtils.isEmpty(value)) return value;
+        String encoded = java.net.URLEncoder.encode(value, java.nio.charset.StandardCharsets.UTF_8);
+        return encoded.replace("+", "%20");
     }
 
     private static class Delivery {
